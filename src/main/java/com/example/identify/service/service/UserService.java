@@ -3,6 +3,8 @@ package com.example.identify.service.service;
 import com.example.identify.service.dto.request.UserCreationRequest;
 import com.example.identify.service.dto.request.UserUpdateRequest;
 import com.example.identify.service.entity.User;
+import com.example.identify.service.exception.AppException;
+import com.example.identify.service.exception.ErrorCode;
 import com.example.identify.service.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -18,7 +20,7 @@ public class UserService {
         User user = new User();
 
         if(userRepository.existsByUsername(request.getUsername()))
-            throw new RuntimeException("User existed");
+            throw new AppException(ErrorCode.USER_EXISTED);
 
         user.setUsername(request.getUsername());
         user.setPassword(request.getPassword());
