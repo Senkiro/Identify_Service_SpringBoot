@@ -1,6 +1,6 @@
 package com.example.identify.service.controller;
 
-import com.example.identify.service.dto.request.ApiResponse;
+import com.example.identify.service.dto.response.ApiResponse;
 import com.example.identify.service.dto.request.UserCreationRequest;
 import com.example.identify.service.dto.request.UserUpdateRequest;
 import com.example.identify.service.dto.response.UserResponse;

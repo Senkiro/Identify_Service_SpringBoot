@@ -1,6 +1,6 @@
 package com.example.identify.service.exception;
 
-import com.example.identify.service.dto.request.ApiResponse;
+import com.example.identify.service.dto.response.ApiResponse;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
