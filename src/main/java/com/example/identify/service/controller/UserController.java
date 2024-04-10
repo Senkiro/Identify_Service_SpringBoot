@@ -30,7 +30,7 @@ public class UserController {
         return apiResponse;
     }
 
-    @GetMapping
+    @GetMapping("/list")
     List<User> getUsers(){
         return userService.getUsers();
     }
