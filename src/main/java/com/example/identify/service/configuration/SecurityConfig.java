@@ -22,12 +22,12 @@ public class SecurityConfig {
 
     private final String[] PUBLIC_ENDPOINTS = {"/users","/auth/token","/auth/introspect"};
 
-    @NonFinal
-    protected static final String SIGNER_KEY =
-            "QvZ6ojkYSL71+a4kHI0L/TCu0gBSwpXCQHuJE+mq5k6Vvf4HIs3di78P4XNQUD9X";
 //    @NonFinal
-//    @Value("${jwt.public-key-location}")
-//    protected String SIGNER_KEY;
+//    protected static final String SIGNER_KEY =
+//            "QvZ6ojkYSL71+a4kHI0L/TCu0gBSwpXCQHuJE+mq5k6Vvf4HIs3di78P4XNQUD9X";
+    @NonFinal
+    @Value("${jwt.signerKey}")
+    protected String SIGNER_KEY;
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity httpSecurity) throws Exception {

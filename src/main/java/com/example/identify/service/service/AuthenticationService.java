@@ -17,6 +17,7 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.NonFinal;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -32,9 +33,13 @@ import java.util.Date;
 public class AuthenticationService {
 
     UserRepository userRepository;
+//    @NonFinal
+//    protected static final String SIGNER_KEY =
+//            "QvZ6ojkYSL71+a4kHI0L/TCu0gBSwpXCQHuJE+mq5k6Vvf4HIs3di78P4XNQUD9X";
+
     @NonFinal
-    protected static final String SIGNER_KEY =
-            "QvZ6ojkYSL71+a4kHI0L/TCu0gBSwpXCQHuJE+mq5k6Vvf4HIs3di78P4XNQUD9X";
+    @Value("${jwt.signerKey}")
+    protected String SIGNER_KEY;
 
     public IntrospectResponse introspect(IntrospectRequest request)
             throws ParseException, JOSEException {
