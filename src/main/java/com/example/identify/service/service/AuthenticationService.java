@@ -2,12 +2,14 @@ package com.example.identify.service.service;
 
 import com.example.identify.service.dto.request.AuthenticationRequest;
 import com.example.identify.service.dto.request.IntrospectRequest;
+import com.example.identify.service.dto.request.LogoutRequest;
 import com.example.identify.service.dto.response.AuthenticationResponse;
 import com.example.identify.service.dto.response.IntrospectResponse;
-import com.example.identify.service.dto.response.UserResponse;
+import com.example.identify.service.entity.InvalidatedToken;
 import com.example.identify.service.entity.User;
 import com.example.identify.service.exception.AppException;
 import com.example.identify.service.exception.ErrorCode;
+import com.example.identify.service.repository.InvalidatedTokenRepository;
 import com.example.identify.service.repository.UserRepository;
 import com.nimbusds.jose.*;
 import com.nimbusds.jose.crypto.MACSigner;
@@ -28,9 +30,7 @@ import org.springframework.util.CollectionUtils;
 import java.text.ParseException;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.Collection;
-import java.util.Date;
-import java.util.StringJoiner;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -39,6 +39,7 @@ import java.util.StringJoiner;
 public class AuthenticationService {
 
     UserRepository userRepository;
+    InvalidatedTokenRepository invalidatedTokenRepository;
 //    @NonFinal
 //    protected static final String SIGNER_KEY =
 //            "QvZ6ojkYSL71+a4kHI0L/TCu0gBSwpXCQHuJE+mq5k6Vvf4HIs3di78P4XNQUD9X";
@@ -50,18 +51,18 @@ public class AuthenticationService {
     public IntrospectResponse introspect(IntrospectRequest request)
             throws ParseException, JOSEException {
         var token = request.getToken();
+        boolean isValid = true;
 
-        JWSVerifier verifier = new MACVerifier(SIGNER_KEY.getBytes());
+        try {
+            verifyToken(token);
 
-        SignedJWT signedJWT = SignedJWT.parse(token);
-
-        Date expityTime = signedJWT.getJWTClaimsSet().getExpirationTime();
-
-        var verified =  signedJWT.verify(verifier);
-
+        }catch (Exception e) {
+            isValid = false;
+        }
         return IntrospectResponse.builder()
-                .valid(verified && expityTime.after(new Date()))
+                .valid(isValid)
                 .build();
+
     }
 
     public AuthenticationResponse authenticate(AuthenticationRequest request){
@@ -82,6 +83,38 @@ public class AuthenticationService {
                 .build();
     }
 
+    public void logout(LogoutRequest request) throws ParseException, JOSEException {
+        var signToken = verifyToken(request.getToken());
+
+        String jid = signToken.getJWTClaimsSet().getJWTID();
+        Date expiryTime = signToken.getJWTClaimsSet().getExpirationTime();
+
+        InvalidatedToken invalidatedToken = InvalidatedToken.builder()
+                .id(jid)
+                .expiryTime(expiryTime)
+                .build();
+
+        invalidatedTokenRepository.save(invalidatedToken);
+    }
+
+    private SignedJWT verifyToken(String token) throws JOSEException, ParseException {
+        JWSVerifier verifier = new MACVerifier(SIGNER_KEY.getBytes());
+
+        SignedJWT signedJWT = SignedJWT.parse(token);
+
+        Date expityTime = signedJWT.getJWTClaimsSet().getExpirationTime();
+
+        var verified =  signedJWT.verify(verifier);
+
+        if(!verified && expityTime.after(new Date()))
+            throw new AppException(ErrorCode.UNAUTHENTICATED);
+
+        if(invalidatedTokenRepository.existsById(signedJWT.getJWTClaimsSet().getJWTID()))
+            throw new AppException(ErrorCode.UNAUTHORIZED);
+
+        return signedJWT;
+    }
+
     public String generateToken(User user){
         JWSHeader jwsHeader = new JWSHeader(JWSAlgorithm.HS512);
 
@@ -92,6 +125,7 @@ public class AuthenticationService {
                 .expirationTime(new Date(
                         Instant.now().plus(1, ChronoUnit.HOURS).toEpochMilli()
                 ))
+                .jwtID(UUID.randomUUID().toString())
                 .claim("scope",buildScope(user))
                 .build();
 

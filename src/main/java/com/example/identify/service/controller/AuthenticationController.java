@@ -1,10 +1,12 @@
 package com.example.identify.service.controller;
 
 import com.example.identify.service.dto.request.IntrospectRequest;
+import com.example.identify.service.dto.request.LogoutRequest;
 import com.example.identify.service.dto.response.ApiResponse;
 import com.example.identify.service.dto.request.AuthenticationRequest;
 import com.example.identify.service.dto.response.AuthenticationResponse;
 import com.example.identify.service.dto.response.IntrospectResponse;
+import com.example.identify.service.entity.InvalidatedToken;
 import com.example.identify.service.service.AuthenticationService;
 import com.nimbusds.jose.JOSEException;
 import lombok.*;
@@ -37,6 +39,14 @@ public class AuthenticationController {
         var result = authenticationService.introspect(request);
         return ApiResponse.<IntrospectResponse>builder()
                 .result(result)
+                .build();
+    }
+
+    @PostMapping("/logout")
+    ApiResponse<Void> authenticate(@RequestBody LogoutRequest request)
+            throws ParseException, JOSEException {
+        authenticationService.logout(request);
+        return ApiResponse.<Void>builder()
                 .build();
     }
 
